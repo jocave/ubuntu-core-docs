@@ -39,6 +39,9 @@ navigation:
       - title: Interfaces
         location: guides/build-device/interfaces.md
 
+      - title: Creating Interfaces
+        location: guides/build-device/creating-interfaces.md
+
 #      - title: Debugging
 
 #  - title: Manage devices

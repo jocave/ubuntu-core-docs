@@ -1,9 +1,9 @@
 ---
-title: Developing snapd Interfaces
+title: Creating Interfaces
 table_of_contents: true
 ---
 
-# Developing Interfaces
+# Creating Interfaces
 
 This guide introduces the terminology and technologies used in an essential component of snapd called _Interfaces_. Having read the guide you should be in a position to consider creating Interfaces of you own. An accompanying codelabs tutorial will be available to walk you through the exact steps needed to create an example Interface.
 
@@ -11,13 +11,13 @@ This guide introduces the terminology and technologies used in an essential comp
 
 ## The sandbox
 
-When using a snap package to distribute software, applications in a production scenario are run in a sandbox. This state is referred to in snapcraft terminology as runing under _strict confinement_.
+When using a snap package to distribute software, applications in a production scenario are run in a sandbox. This state is referred to in snapcraft terminology as running under _strict confinement_.
 
 A sandbox is a logical space where device owners can let processes run with tighly controlled access to system resources like data and hardware. In fact the default condition is that the process can only access files delivered in their own snap, a set of base applications in the _core snap_ and some writable storage.
 
 ## Getting familiar with the Security Systems
 
-The sandbox environment is maintained by a number of systems that are referred to as Security Systems in snapd. They can be grouped in to two sets:
+The sandbox environment is maintained by a number of systems that are referred to as _Security Systems_ in snapd. They can be grouped in to two sets:
 
 Those responsible for the sandbox process confinement:
 
@@ -34,54 +34,19 @@ Those that populate the sandbox with resources that the process can use:
 
 ## Accessing more resources through Interfaces
 
-Default sandbox is restrictive
-Processes that are run in the sandbox can read other files from the same package
-… and very little else
+As described on the main [Interfaces](interfaces.md) page, the mechanism by which a snap can get access to more resources is Interfaces. Let's begin looking at how an Interfaces is defined.
 
-How do we securely expose more resources to the sandbox?
+Interfaces are defined in the snapd source tree _only_. There is no means by which a Interfaces can be declared and distributed by a snap to a running system. This explicit requirement has been made to ensure security an intrinsic part of the snapd based systems. Interfaces are subject to review both from a code quality and security perspective by subject matter experts and the wider community.
 
+The snapd source tree is hosted on [github](http://github.com/snapcore/snapd). You will find the current Interface implemenations under [interfaces/builtin](https://github.com/snapcore/snapd/tree/master/interfaces/builtin).
 
-The means by which extra resources are revealed to the sandbox
-
-The Interface defines how the resource is accessed by the process
-Operation follows a provider/consumer model
-The resource consumer side is called a plug
-The resource provider is called a slot
-
-
-
-## How are Interfaces defined?
-
-Interfaces defined in the snapd source tree only There is no loading of Interfaces from snaps when the system is booted, no plugin architecture
-
-Makes security an intrinsic part of the snappy system
-Interfaces are subject to review both from a code quality and security perspective
-https://github.com/snapcore/snapd/tree/master/interfaces/builtin
-To create a new Interface you need some basic knowledge of Go programming language
-Will need to submit any new interfaces to the snapd project on github via a pull request
-
-
-
-## How do Interfaces modify Security Systems?
-
-Security systems are modified by receiving Snippets from Interfaces
-A snippet is an array of bytes
-Most interfaces expect this data to be some text
-Connections persist across reboots so any modified system state must be able to be restored
-
+If you followed last two hyperlinks you will quickly identify that the majority of the components of snapd are implemented in the Go programming language. Hence to submit a new Interface you will need to write some Go code.
 
 ## What does an Interface defintion look like?
 
-https://github.com/snapcore/snapd/blob/master/interfaces/core.go#L83
+As mentioned previously various Security Systems are responsible for maintaining the sandboxed environment. The Interface modifies the configuration of these systems by passing _snippets_ to them. Snippets are implemented as a collection of untyped data, but their purpose is to carry some modification to the policy that the Security System is applying to apps. For most of the security systems this data is actually some text which will be processed and stored in a configuration file. Plug/Slot connections persist across reboots so any modified Security System state must be able to be restored, use of the configuration files enables this.
 
-snapd declares a Go interface called Interface
-In Go interface implies methods that should be implemented by all compatible types
-
-go is generally considered to NOT be object-oriented
-
-Not inheritance - An interface indicates that to be compatible you should implement all the specified methods
-
-The Interface interface
+The Go language uses a type called ```interface``` to allow the definition of a set of methods. All user types that wish to be compatible with this interface should have these methods. Here is the interface named Interface that defines the method set that anyone writing a interface will need to implement:
 
 ```go
 type Interface interface {
@@ -102,6 +67,7 @@ type Interface interface {
     AutoConnect(plug *Plug, slot *Slot) bool
 }
 ```
+_[Ref: interfaces/core.go](https://github.com/snapcore/snapd/blob/master/interfaces/core.go)_
 
 
 Check the plug/slot declaration
